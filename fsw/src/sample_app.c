@@ -37,6 +37,11 @@
 #include <string.h>
 #include "sample_lib.h"
 
+//here are the non-standard, testing packages
+#include <stdlib.h>
+#include "time.h"
+#include <stdio.h>
+#include <unistd.h>
 /*
 ** global data
 */
@@ -92,7 +97,13 @@ void SAMPLE_APP_Main(void)
 
         if (status == CFE_SUCCESS)
         {
+            /* Now we can see that it is scheduled to run every 4 seconds.*/
+
             SAMPLE_APP_ProcessCommandPacket(SBBufPtr);
+
+            sleep(.1);
+
+           
         }
         else
         {
@@ -242,10 +253,25 @@ void SAMPLE_APP_ProcessCommandPacket(CFE_SB_Buffer_t *SBBufPtr)
     {
         case SAMPLE_APP_CMD_MID:
             SAMPLE_APP_ProcessGroundCommand(SBBufPtr);
+            // char currCount[8];
+            // char stdmsg[100] = "Current Cmd Counter: ";
+            // sprintf(currCount, "%d", SAMPLE_APP_Data.CmdCounter); 
+            // strcat(stdmsg,currCount);
+            // CFE_EVS_SendEvent(SAMPLE_APP_STARTUP_INF_EID, CFE_EVS_EventType_INFORMATION, stdmsg,
+            //           SAMPLE_APP_VERSION_STRING);
             break;
 
         case SAMPLE_APP_SEND_HK_MID:
             SAMPLE_APP_ReportHousekeeping((CFE_MSG_CommandHeader_t *)SBBufPtr);
+            time_t mytime = time(NULL);
+            char * time_str = ctime(&mytime);
+            time_str[strlen(time_str)-1] = '\0';
+
+            char msgg[100] = "Housekeeping: ";
+
+            strcat(msgg, time_str);
+            CFE_EVS_SendEvent(SAMPLE_APP_STARTUP_INF_EID, CFE_EVS_EventType_INFORMATION, msgg,
+                      SAMPLE_APP_VERSION_STRING);
             break;
 
         default:
@@ -356,8 +382,11 @@ int32 SAMPLE_APP_Noop(const SAMPLE_APP_NoopCmd_t *Msg)
 
     SAMPLE_APP_Data.CmdCounter++;
 
-    CFE_EVS_SendEvent(SAMPLE_APP_COMMANDNOP_INF_EID, CFE_EVS_EventType_INFORMATION, "SAMPLE: NOOP command %s",
-                      SAMPLE_APP_VERSION);
+    // CFE_EVS_SendEvent(SAMPLE_APP_COMMANDNOP_INF_EID, CFE_EVS_EventType_INFORMATION, "SAMPLE: NOOP command %s",
+    //                   SAMPLE_APP_VERSION);
+
+    CFE_EVS_SendEvent(SAMPLE_APP_COMMANDNOP_INF_EID, CFE_EVS_EventType_INFORMATION, "SAMPLE: NOOP command %d",
+                      SAMPLE_APP_Data.CmdCounter);
 
     return CFE_SUCCESS;
 
